@@ -1,74 +1,89 @@
 <?php
 /**
- * Site footer.
+ * Site footer and mobile action bar.
  *
  * @package Super_Healthcare
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$cqc_url = shc_cqc_url_or_default();
+$is_referrals = 'referrals' === shc_page_context();
 ?>
-<!-- ============ FOOTER ============ -->
 <footer class="site-footer">
   <div class="container footer-grid">
     <div class="footer-brand">
-      <a class="logo logo--footer" href="<?php echo shc_url( '/' ); ?>" aria-label="Super Healthcare home"><img class="site-logo-image" src="<?php echo shc_asset( 'img/new-images/superhealthcare-logo.jpg' ); ?>" width="1192" height="321" alt="Super Healthcare logo"></a>
-      <p>People first. Independence always.</p>
+      <a class="logo logo--footer" href="<?php echo shc_url( '/' ); ?>"><img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="800" height="217" alt="Super Healthcare home" loading="lazy"></a>
+      <p class="footer-about"><strong>Super Healthcare Ltd</strong> provides personalised care at home and supported living for adults aged 18 and over in Westcliff-on-Sea and the surrounding area.</p>
       <address>
         <?php shc_echo_address(); ?><br>
-        <a href="<?php echo esc_url( shc_phone_href() ); ?>"><?php shc_echo_phone(); ?></a><br>
+        <a href="<?php echo esc_url( shc_phone_href() ); ?>" data-track="phone_click"><?php shc_echo_phone(); ?></a><br>
         <?php shc_echo_email_link(); ?>
       </address>
-      <div class="footer-social">
-        <a href="<?php echo shc_social_url( 'instagram_url' ); ?>" target="_blank" rel="noopener">Instagram</a>
-        <a href="<?php echo shc_social_url( 'facebook_url' ); ?>" target="_blank" rel="noopener">Facebook</a>
-        <a href="<?php echo shc_map_url(); ?>" target="_blank" rel="noopener">Google Maps</a>
-      </div>
+      <ul class="footer-social">
+        <?php if ( shc_social_url( 'facebook_url' ) ) : ?>
+        <li><a href="<?php echo shc_social_url( 'facebook_url' ); ?>" target="_blank" rel="noopener">Facebook<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        <?php endif; ?>
+        <?php if ( shc_social_url( 'instagram_url' ) ) : ?>
+        <li><a href="<?php echo shc_social_url( 'instagram_url' ); ?>" target="_blank" rel="noopener">Instagram<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        <?php endif; ?>
+        <li><a href="<?php echo shc_map_url(); ?>" target="_blank" rel="noopener">Map<span class="visually-hidden"> (opens Google Maps in a new tab)</span></a></li>
+      </ul>
     </div>
-    <nav aria-label="Adult care">
-      <h2 class="footer-heading">Adult Care at Home</h2>
+
+    <nav aria-label="Care at Home">
+      <h2 class="footer-heading">Care at Home</h2>
       <ul>
-        <li><a href="<?php echo shc_url( '/adult-care-at-home/domcare/' ); ?>">DomCare</a></li>
-        <li><a href="<?php echo shc_url( '/adult-care-at-home/live-in-care/' ); ?>">Live-in Care</a></li>
-        <li><a href="<?php echo shc_url( '/adult-care-at-home/respite-care/' ); ?>">Respite Care</a></li>
-        <li><a href="<?php echo shc_url( '/adult-care-at-home/dementia-care/' ); ?>">Dementia Care</a></li>
-        <li><a href="<?php echo shc_url( '/adult-care-at-home/palliative-care/' ); ?>">Palliative Care</a></li>
-        <li><a href="<?php echo shc_url( '/adult-care-at-home/companionship/' ); ?>">Companionship</a></li>
+        <li><a href="<?php echo shc_url( '/care-at-home/' ); ?>">Overview</a></li>
+        <?php foreach ( shc_get_services() as $slug => $svc ) : ?>
+        <li><a href="<?php echo shc_url( '/care-at-home/' . $slug . '/' ); ?>"><?php echo esc_html( $svc['nav'] ); ?></a></li>
+        <?php endforeach; ?>
       </ul>
     </nav>
-    <nav aria-label="Supported accommodation">
-      <h2 class="footer-heading">Supported Accommodation 18+</h2>
+
+    <nav aria-label="Supported Living and more">
+      <h2 class="footer-heading">Supported Living</h2>
       <ul>
-        <li><a href="<?php echo shc_url( '/supported-accommodation/' ); ?>">Overview</a></li>
-        <li><a href="<?php echo shc_url( '/supported-accommodation/our-homes/' ); ?>">Our homes</a></li>
-        <li><a href="<?php echo shc_url( '/supported-accommodation/referral-process/' ); ?>">Referral process</a></li>
-        <li><a href="<?php echo shc_url( '/professionals/' ); ?>">For professionals</a></li>
-        <li><a href="<?php echo shc_url( '/work-with-us/' ); ?>">Work with us</a></li>
+        <li><a href="<?php echo shc_url( '/supported-living/' ); ?>">Supported Living 18+</a></li>
+        <li><a href="<?php echo shc_url( '/supported-living/#property' ); ?>">234 Hamlet Court Road</a></li>
+        <li><a href="<?php echo shc_url( '/referrals/' ); ?>">Referrals for professionals</a></li>
+      </ul>
+      <h2 class="footer-heading footer-heading--spaced">Super Healthcare</h2>
+      <ul>
+        <li><a href="<?php echo shc_url( '/about-us/' ); ?>">About Us</a></li>
+        <li><a href="<?php echo shc_url( '/our-community/' ); ?>">Our Community</a></li>
+        <li><a href="<?php echo shc_url( '/careers/' ); ?>">Careers</a></li>
+        <li><a href="<?php echo shc_url( '/contact/' ); ?>">Contact</a></li>
       </ul>
     </nav>
-    <nav aria-label="Policies">
-      <h2 class="footer-heading">Trust and policies</h2>
+
+    <nav aria-label="Quality and policies">
+      <h2 class="footer-heading">Quality and policies</h2>
       <ul>
-        <li><a href="<?php echo esc_url( $cqc_url ); ?>" target="_blank" rel="noopener">CQC report<span class="visually-hidden"> (opens in a new tab)</span></a></li>
-        <li><a href="<?php echo shc_url( '/about/safeguarding/' ); ?>">Safeguarding</a></li>
-        <li><a href="<?php echo shc_url( '/about/policies/complaints/' ); ?>">Complaints</a></li>
+        <li><a href="<?php echo shc_url( '/about-us/quality-and-cqc/' ); ?>">Quality &amp; CQC</a></li>
+        <li><a href="<?php echo esc_url( shc_cqc_url() ); ?>" target="_blank" rel="noopener" data-track="cqc_click">CQC profile<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        <li><a href="<?php echo shc_url( '/about-us/safeguarding/' ); ?>">Safeguarding</a></li>
+        <li><a href="<?php echo shc_url( '/about-us/complaints/' ); ?>">Complaints</a></li>
         <li><a href="<?php echo shc_url( '/privacy/' ); ?>">Privacy notice</a></li>
         <li><a href="<?php echo shc_url( '/cookies/' ); ?>">Cookies</a></li>
         <li><a href="<?php echo shc_url( '/accessibility/' ); ?>">Accessibility</a></li>
       </ul>
+      <?php shc_cqc_seal( 'cqc-seal--footer' ); ?>
     </nav>
   </div>
   <div class="container footer-base">
-    <p>© <?php echo esc_html( gmdate( 'Y' ) ); ?> Super Healthcare. Company number <?php shc_echo_company_number(); ?>.</p>
+    <p>© <?php echo esc_html( gmdate( 'Y' ) ); ?> Super Healthcare Ltd. Registered in England and Wales, company number <?php shc_echo_company_number(); ?>.</p>
+    <p>People first. Independence always.</p>
   </div>
 </footer>
 
-<!-- Mobile quick actions -->
-<div class="mobile-actions" aria-label="Quick contact">
-  <a href="<?php echo esc_url( shc_phone_href() ); ?>" class="mobile-action mobile-action--call">Call us</a>
-  <a href="<?php echo shc_url( '/contact/request-an-introduction/' ); ?>" class="mobile-action mobile-action--enquire">Enquire</a>
-</div>
+<nav class="mobile-actions" aria-label="Quick contact">
+  <a href="<?php echo esc_url( shc_phone_href() ); ?>" class="mobile-action mobile-action--call" data-track="phone_click"><?php echo shc_phone_icon( 18 ); // phpcs:ignore ?> Call</a>
+  <?php if ( $is_referrals ) : ?>
+  <a href="<?php echo shc_url( '/referrals/#enquiry-form' ); ?>" class="mobile-action mobile-action--enquire" data-track="cta_referral">Refer</a>
+  <?php else : ?>
+  <a href="<?php echo shc_url( '/contact/#enquiry-form' ); ?>" class="mobile-action mobile-action--enquire" data-track="cta_get_support">Enquire</a>
+  <?php endif; ?>
+</nav>
 <?php wp_footer(); ?>
 </body>
 </html>

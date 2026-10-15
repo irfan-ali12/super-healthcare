@@ -1,6 +1,6 @@
 <?php
 /**
- * Idempotent page creation and static front page setup.
+ * Page tree, one-time migration from theme 1.x, and 301 redirects.
  *
  * @package Super_Healthcare
  */
@@ -8,76 +8,142 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Page tree: path => title (nested via slash).
+ * Page tree: path => title. Parents must come before children.
  *
  * @return array<string, string>
  */
 function shc_get_page_tree() {
 	return array(
-		'home'                                                      => 'Home',
-		'adult-care-at-home'                                        => 'Adult Care at Home',
-		'adult-care-at-home/domcare'                                => 'DomCare',
-		'adult-care-at-home/live-in-care'                           => 'Live-in Care',
-		'adult-care-at-home/respite-care'                           => 'Respite Care',
-		'adult-care-at-home/dementia-care'                          => 'Dementia Care',
-		'adult-care-at-home/palliative-care'                        => 'Palliative Care',
-		'adult-care-at-home/companionship'                          => 'Companionship',
-		'supported-accommodation'                                   => 'Supported Accommodation 18+',
-		'supported-accommodation/our-homes'                         => 'Our homes',
-		'supported-accommodation/life-skills'                       => 'Life skills',
-		'supported-accommodation/education-and-employment'          => 'Education and employment',
-		'supported-accommodation/referral-process'                  => 'Referral process',
-		'supported-accommodation/faqs'                              => 'FAQs',
-		'supported-accommodation/easy-read'                         => 'Easy Read',
-		'contact'                                                   => 'Contact',
-		'contact/request-an-introduction'                           => 'Request an introduction',
-		'about'                                                     => 'About',
-		'about/our-approach'                                        => 'Our approach',
-		'about/team'                                                => 'Team',
-		'about/cqc-and-quality'                                     => 'CQC and quality',
-		'about/safeguarding'                                        => 'Safeguarding',
-		'about/policies'                                            => 'Policies',
-		'about/policies/complaints'                                 => 'Complaints',
-		'stories'                                                   => 'Stories',
-		'professionals'                                             => 'Professionals',
-		'professionals/referral-form'                               => 'Referral form',
-		'work-with-us'                                              => 'Work with us',
-		'work-with-us/standards'                                    => 'Training standards',
-		'privacy'                                                   => 'Privacy notice',
-		'cookies'                                                   => 'Cookies',
-		'accessibility'                                             => 'Accessibility',
+		'home'                            => 'Home',
+		'care-at-home'                    => 'Care at Home',
+		'care-at-home/domcare'            => 'DomCare',
+		'care-at-home/live-in-care'       => 'Live-in Care',
+		'care-at-home/respite-care'       => 'Respite Care',
+		'care-at-home/dementia-care'      => 'Dementia Care',
+		'care-at-home/palliative-care'    => 'Palliative Care',
+		'care-at-home/companionship'      => 'Companionship',
+		'supported-living'                => 'Supported Living',
+		'referrals'                       => 'Referrals & Professional Partnerships',
+		'our-community'                   => 'Our Community',
+		'about-us'                        => 'About Us',
+		'about-us/quality-and-cqc'        => 'Quality & CQC',
+		'about-us/safeguarding'           => 'Safeguarding',
+		'about-us/complaints'             => 'Complaints',
+		'about-us/policies'               => 'Policies',
+		'careers'                         => 'Careers',
+		'contact'                         => 'Contact',
+		'contact/request-an-introduction' => 'Request an introduction',
+		'privacy'                         => 'Privacy notice',
+		'cookies'                         => 'Cookies',
+		'accessibility'                   => 'Accessibility statement',
 	);
 }
 
 /**
- * Create or update all theme pages.
+ * Theme 1.x page paths renamed in place (keeps IDs and any editor content).
+ * old path => array( new parent path or '', new slug, new title ).
+ *
+ * @return array<string, array{0: string, 1: string, 2: string}>
+ */
+function shc_v1_page_renames() {
+	return array(
+		'adult-care-at-home'        => array( '', 'care-at-home', 'Care at Home' ),
+		'supported-accommodation'   => array( '', 'supported-living', 'Supported Living' ),
+		'professionals'             => array( '', 'referrals', 'Referrals & Professional Partnerships' ),
+		'stories'                   => array( '', 'our-community', 'Our Community' ),
+		'about'                     => array( '', 'about-us', 'About Us' ),
+		'about-us/cqc-and-quality'  => array( 'about-us', 'quality-and-cqc', 'Quality & CQC' ),
+		'about-us/policies/complaints' => array( 'about-us', 'complaints', 'Complaints' ),
+		'work-with-us'              => array( '', 'careers', 'Careers' ),
+	);
+}
+
+/**
+ * Theme 1.x pages that no longer exist in the structure (set to draft, never deleted).
+ *
+ * @return string[]
+ */
+function shc_v1_retired_paths() {
+	return array(
+		'supported-living/our-homes',
+		'supported-living/life-skills',
+		'supported-living/education-and-employment',
+		'supported-living/referral-process',
+		'supported-living/faqs',
+		'supported-living/easy-read',
+		'referrals/referral-form',
+		'about-us/our-approach',
+		'about-us/team',
+		'careers/standards',
+	);
+}
+
+/**
+ * Rename and retire theme 1.x pages. Runs once.
+ */
+function shc_migrate_pages_v2() {
+	if ( get_option( 'shc_pages_migrated_v2' ) ) {
+		return;
+	}
+	foreach ( shc_v1_page_renames() as $old_path => $target ) {
+		$page = get_page_by_path( $old_path, OBJECT, 'page' );
+		if ( ! $page ) {
+			continue;
+		}
+		list( $parent_path, $slug, $title ) = $target;
+		$new_path                           = ( $parent_path ? $parent_path . '/' : '' ) . $slug;
+		if ( get_page_by_path( $new_path, OBJECT, 'page' ) ) {
+			continue; // Target already exists; leave the old page alone.
+		}
+		$parent = 0;
+		if ( $parent_path ) {
+			$p      = get_page_by_path( $parent_path, OBJECT, 'page' );
+			$parent = $p ? (int) $p->ID : 0;
+		}
+		wp_update_post(
+			array(
+				'ID'          => $page->ID,
+				'post_name'   => $slug,
+				'post_title'  => $title,
+				'post_parent' => $parent,
+			)
+		);
+	}
+	foreach ( shc_v1_retired_paths() as $path ) {
+		$page = get_page_by_path( $path, OBJECT, 'page' );
+		if ( $page && 'publish' === $page->post_status ) {
+			wp_update_post(
+				array(
+					'ID'          => $page->ID,
+					'post_status' => 'draft',
+				)
+			);
+		}
+	}
+	// Leftover 1.x policies parent: keep it as About Us > Policies.
+	update_option( 'shc_pages_migrated_v2', '1', false );
+}
+
+/**
+ * Create any missing pages and set the static front page. Idempotent.
  *
  * @return string Summary message.
  */
 function shc_create_pages() {
-	$tree = shc_get_page_tree();
-	$ids  = array();
-
-	foreach ( $tree as $path => $title ) {
-		$existing = get_page_by_path( $path, OBJECT, 'page' );
-		if ( $existing ) {
-			$ids[ $path ] = (int) $existing->ID;
+	shc_migrate_pages_v2();
+	$created = 0;
+	foreach ( shc_get_page_tree() as $path => $title ) {
+		if ( get_page_by_path( $path, OBJECT, 'page' ) ) {
 			continue;
 		}
-
-		$parts    = explode( '/', $path );
-		$slug     = array_pop( $parts );
-		$parent   = 0;
-		if ( ! empty( $parts ) ) {
-			$parent_path = implode( '/', $parts );
-			$parent      = isset( $ids[ $parent_path ] ) ? $ids[ $parent_path ] : 0;
-			if ( ! $parent ) {
-				$parent_page = get_page_by_path( $parent_path, OBJECT, 'page' );
-				$parent      = $parent_page ? (int) $parent_page->ID : 0;
-			}
+		$parts  = explode( '/', $path );
+		$slug   = array_pop( $parts );
+		$parent = 0;
+		if ( $parts ) {
+			$p      = get_page_by_path( implode( '/', $parts ), OBJECT, 'page' );
+			$parent = $p ? (int) $p->ID : 0;
 		}
-
-		$post_id = wp_insert_post(
+		$id = wp_insert_post(
 			array(
 				'post_title'   => $title,
 				'post_name'    => $slug,
@@ -88,75 +154,164 @@ function shc_create_pages() {
 			),
 			true
 		);
-
-		if ( ! is_wp_error( $post_id ) ) {
-			$ids[ $path ] = (int) $post_id;
+		if ( ! is_wp_error( $id ) ) {
+			++$created;
 		}
 	}
 
-	$home = get_page_by_path( 'home' );
+	$home = get_page_by_path( 'home', OBJECT, 'page' );
 	if ( $home ) {
 		update_option( 'show_on_front', 'page' );
 		update_option( 'page_on_front', $home->ID );
 	}
+	flush_rewrite_rules( false );
 
 	return sprintf(
-		/* translators: %d: number of pages in tree */
-		__( 'Super Healthcare pages ready (%d defined paths). Home set as static front page.', 'super-healthcare' ),
-		count( $tree )
+		/* translators: %d: pages created */
+		__( 'Super Healthcare pages are up to date (%d created). Home is the static front page.', 'super-healthcare' ),
+		$created
 	);
 }
 
 /**
- * Admin Tools action.
- */
-function shc_register_pages_admin_action() {
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return;
-	}
-	if ( isset( $_GET['shc_create_pages'] ) && isset( $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'shc_create_pages' ) ) {
-		$msg = shc_create_pages();
-		wp_safe_redirect( add_query_arg( 'shc_pages_done', rawurlencode( $msg ), admin_url( 'themes.php' ) ) );
-		exit;
-	}
-}
-add_action( 'admin_init', 'shc_register_pages_admin_action' );
-
-/**
- * Theme activation: offer defaults and create pages once.
+ * Run setup on theme activation, and once after updating from 1.x.
  */
 function shc_theme_activation() {
-	$defaults = array(
-		'phone'                   => '01702 333 120',
-		'email'                   => 'info@superhealthcare.co.uk',
-		'office_address'         => "201 Hamlet Court Road, Westcliff-on-Sea, Essex",
-		'google_map_url'         => 'https://maps.google.com/?q=201+Hamlet+Ct+Rd%2C+Westcliff-on-Sea%2C+Southend-on-Sea%2C+Westcliff-on-Sea+SS0+7EL%2C+United+Kingdom',
-		'facebook_url'           => 'https://www.facebook.com/superhealthcareuk',
-		'instagram_url'          => 'http://instagram.com/superhealthcareuk/',
-		'cqc_url'                => 'https://www.cqc.org.uk/location/1-6575573200',
-		'enquiry_email_adult'    => 'info@superhealthcare.co.uk',
-		'enquiry_email_supported'=> 'info@superhealthcare.co.uk',
-	);
-	$current  = get_option( 'shc_settings', array() );
-	if ( ! is_array( $current ) ) {
-		$current = array();
-	}
-	update_option( 'shc_settings', array_merge( $defaults, $current ) );
+	shc_migrate_settings_v2();
 	shc_create_pages();
+	update_option( 'shc_theme_version', SHC_THEME_VERSION, false );
 }
 add_action( 'after_switch_theme', 'shc_theme_activation' );
 
 /**
- * Admin notice with create-pages link.
+ * Upgrade path: an existing 1.x install gets the v2 structure on next admin load.
  */
-function shc_pages_admin_notice() {
-	if ( ! current_user_can( 'manage_options' ) ) {
+function shc_maybe_upgrade() {
+	if ( get_option( 'shc_theme_version' ) === SHC_THEME_VERSION ) {
 		return;
 	}
-	if ( isset( $_GET['shc_pages_done'] ) ) {
+	shc_migrate_settings_v2();
+	shc_create_pages();
+	update_option( 'shc_theme_version', SHC_THEME_VERSION, false );
+}
+add_action( 'admin_init', 'shc_maybe_upgrade' );
+
+/*
+ * ------------------------------------------------------------------
+ * 301 redirects: theme 1.x paths and the current live site's URLs.
+ * ------------------------------------------------------------------
+ */
+
+/**
+ * Old path (lowercase, no slashes) => new path. Prefix rules end with "/*".
+ *
+ * @return array<string, string>
+ */
+function shc_redirect_map() {
+	return array(
+		// Current live site (superhealthcare.co.uk).
+		'home'                 => '/',
+		'services'             => '/care-at-home/',
+		'live-in-care'         => '/care-at-home/live-in-care/',
+		'respite-care'         => '/care-at-home/respite-care/',
+		'dementia-care'        => '/care-at-home/dementia-care/',
+		'palliative-care'      => '/care-at-home/palliative-care/',
+		'book-an-introduction' => '/contact/',
+		'testimonials'         => '/our-community/',
+		'recruitment'          => '/careers/',
+		'contact-us'           => '/contact/',
+		'privacy-policy'       => '/privacy/',
+		// Theme 1.x.
+		'adult-care-at-home/*' => '/care-at-home/',
+		'supported-accommodation/*' => '/supported-living/',
+		'professionals/*'      => '/referrals/',
+		'stories/*'            => '/our-community/',
+		'about/cqc-and-quality' => '/about-us/quality-and-cqc/',
+		'about/safeguarding'   => '/about-us/safeguarding/',
+		'about/policies/complaints' => '/about-us/complaints/',
+		'about/policies'       => '/about-us/policies/',
+		'about/*'              => '/about-us/',
+		'work-with-us/*'       => '/careers/',
+	);
+}
+
+/**
+ * Resolve a request path against the redirect map.
+ *
+ * @param string $path Request path without leading/trailing slashes.
+ * @return string|null Target path.
+ */
+function shc_redirect_target( $path ) {
+	$path = strtolower( trim( $path, '/' ) );
+	$map  = shc_redirect_map();
+	if ( isset( $map[ $path ] ) ) {
+		return $map[ $path ];
+	}
+	foreach ( $map as $from => $to ) {
+		if ( '/*' !== substr( $from, -2 ) ) {
+			continue;
+		}
+		$base = substr( $from, 0, -2 );
+		if ( $path === $base ) {
+			return $to;
+		}
+		if ( 0 === strpos( $path, $base . '/' ) ) {
+			// Keep service sub-pages: /adult-care-at-home/domcare/ -> /care-at-home/domcare/.
+			if ( 'adult-care-at-home' === $base ) {
+				return '/care-at-home/' . substr( $path, strlen( $base ) + 1 ) . '/';
+			}
+			return $to;
+		}
+	}
+	return null;
+}
+
+/**
+ * Issue 301s for unknown paths that match the map.
+ */
+function shc_maybe_redirect() {
+	if ( ! is_404() ) {
+		return;
+	}
+	$path   = (string) wp_parse_url( isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( $_SERVER['REQUEST_URI'] ) : '', PHP_URL_PATH );
+	$target = shc_redirect_target( $path );
+	if ( null !== $target ) {
+		wp_safe_redirect( home_url( $target ), 301, 'Super Healthcare' );
+		exit;
+	}
+}
+add_action( 'template_redirect', 'shc_maybe_redirect', 1 );
+
+/*
+ * ------------------------------------------------------------------
+ * Admin: manual sync.
+ * ------------------------------------------------------------------
+ */
+
+/**
+ * Handle the Tools page action.
+ */
+function shc_register_pages_admin_action() {
+	if ( ! isset( $_GET['shc_create_pages'], $_GET['_wpnonce'] ) || ! current_user_can( 'manage_options' ) ) {
+		return;
+	}
+	if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'shc_create_pages' ) ) {
+		return;
+	}
+	$msg = shc_create_pages();
+	wp_safe_redirect( add_query_arg( 'shc_pages_done', rawurlencode( $msg ), admin_url( 'tools.php?page=shc-pages' ) ) );
+	exit;
+}
+add_action( 'admin_init', 'shc_register_pages_admin_action' );
+
+/**
+ * Success notice after a manual sync.
+ */
+function shc_pages_admin_notice() {
+	if ( isset( $_GET['shc_pages_done'] ) && current_user_can( 'manage_options' ) ) {
 		printf(
 			'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
-			esc_html( wp_unslash( $_GET['shc_pages_done'] ) )
+			esc_html( sanitize_text_field( wp_unslash( $_GET['shc_pages_done'] ) ) )
 		);
 	}
 }
@@ -192,13 +347,13 @@ function shc_render_tools_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$url = wp_nonce_url( admin_url( 'themes.php?shc_create_pages=1' ), 'shc_create_pages' );
+	$url = wp_nonce_url( admin_url( 'tools.php?page=shc-pages&shc_create_pages=1' ), 'shc_create_pages' );
 	?>
 	<div class="wrap">
-		<h1><? esc_html_e( 'Super Healthcare pages', 'super-healthcare' ); ?></h1>
-		<p><? esc_html_e( 'Create or update all pages used by the theme (idempotent). Sets Home as the static front page.', 'super-healthcare' ); ?></p>
-		<p><a class="button button-primary" href="<?php echo esc_url( $url ); ?>"><? esc_html_e( 'Run page setup', 'super-healthcare' ); ?></a></p>
-		<p><? esc_html_e( 'WP-CLI: wp shc create-pages', 'super-healthcare' ); ?></p>
+		<h1><?php esc_html_e( 'Super Healthcare pages', 'super-healthcare' ); ?></h1>
+		<p><?php esc_html_e( 'Creates any missing pages in the site structure (safe to run more than once) and sets Home as the static front page.', 'super-healthcare' ); ?></p>
+		<p><a class="button button-primary" href="<?php echo esc_url( $url ); ?>"><?php esc_html_e( 'Run page setup', 'super-healthcare' ); ?></a></p>
+		<p><?php esc_html_e( 'WP-CLI: wp shc create-pages', 'super-healthcare' ); ?></p>
 	</div>
 	<?php
 }

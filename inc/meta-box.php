@@ -31,11 +31,11 @@ function shc_render_page_meta_box( $post ) {
 	$reviewed = get_post_meta( $post->ID, 'shc_reviewed', true );
 	?>
 	<p>
-		<label for="shc_owner"><? esc_html_e( 'Page owner', 'super-healthcare' ); ?></label>
+		<label for="shc_owner"><?php esc_html_e( 'Page owner', 'super-healthcare' ); ?></label>
 		<input type="text" class="widefat" id="shc_owner" name="shc_owner" value="<?php echo esc_attr( $owner ); ?>">
 	</p>
 	<p>
-		<label for="shc_reviewed"><? esc_html_e( 'Last reviewed', 'super-healthcare' ); ?></label>
+		<label for="shc_reviewed"><?php esc_html_e( 'Last reviewed', 'super-healthcare' ); ?></label>
 		<input type="text" class="widefat" id="shc_reviewed" name="shc_reviewed" value="<?php echo esc_attr( $reviewed ); ?>" placeholder="e.g. 1 October 2026">
 	</p>
 	<?php

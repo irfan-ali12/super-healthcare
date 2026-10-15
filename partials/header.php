@@ -1,24 +1,22 @@
 <?php
 /**
- * Site header.
+ * Site header and primary navigation.
  *
  * @package Super_Healthcare
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$mega_class = 'nav-link mega-toggle';
-if ( shc_nav_services_is_current() ) {
-	$mega_class .= ' is-current';
-}
+$services   = shc_get_services();
+$care_cur   = shc_in_section( '/care-at-home/' ) ? ' is-current' : '';
+$about_cur  = shc_in_section( '/about-us/' ) ? ' is-current' : '';
 ?>
 <a class="skip-link" href="#main"><?php esc_html_e( 'Skip to main content', 'super-healthcare' ); ?></a>
 
-<!-- ============ HEADER ============ -->
 <header class="site-header">
   <div class="container header-inner">
-    <a class="logo" href="<?php echo shc_url( '/' ); ?>" aria-label="Super Healthcare home">
-      <img class="site-logo-image" src="<?php echo shc_asset( 'img/new-images/superhealthcare-logo.jpg' ); ?>" width="1192" height="321" alt="Super Healthcare logo">
+    <a class="logo" href="<?php echo shc_url( '/' ); ?>">
+      <img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="800" height="217" alt="Super Healthcare home">
     </a>
 
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
@@ -28,47 +26,55 @@ if ( shc_nav_services_is_current() ) {
 
     <nav class="primary-nav" id="primary-nav" aria-label="Main">
       <ul class="nav-list">
-        <li class="has-mega">
-          <button class="<?php echo esc_attr( $mega_class ); ?>" type="button" aria-expanded="false" aria-controls="mega-services">Services</button>
-          <div class="mega" id="mega-services">
-            <div class="mega-col mega-col--adult">
-              <p class="mega-heading"><a href="<?php echo shc_url( '/adult-care-at-home/' ); ?>">Adult Care at Home</a></p>
-              <ul>
-                <li><a href="<?php echo shc_url( '/adult-care-at-home/domcare/' ); ?>">DomCare (domiciliary care)</a></li>
-                <li><a href="<?php echo shc_url( '/adult-care-at-home/live-in-care/' ); ?>">Live-in Care</a></li>
-                <li><a href="<?php echo shc_url( '/adult-care-at-home/respite-care/' ); ?>">Respite Care</a></li>
-                <li><a href="<?php echo shc_url( '/adult-care-at-home/dementia-care/' ); ?>">Dementia Care</a></li>
-                <li><a href="<?php echo shc_url( '/adult-care-at-home/palliative-care/' ); ?>">Palliative Care</a></li>
-                <li><a href="<?php echo shc_url( '/adult-care-at-home/companionship/' ); ?>">Companionship</a></li>
+        <li class="has-dropdown">
+          <button class="nav-link dropdown-toggle<?php echo esc_attr( $care_cur ); ?>" type="button" aria-expanded="false" aria-controls="dd-care">Care at Home</button>
+          <div class="dropdown dropdown--mega" id="dd-care">
+            <div class="mega-services">
+              <p class="mega-heading"><a href="<?php echo shc_url( '/care-at-home/' ); ?>"<?php echo shc_in_section( '/care-at-home/' ) && '/care-at-home/' === shc_current_path() ? ' aria-current="page"' : ''; ?>>Care at Home overview</a></p>
+              <ul class="mega-list">
+                <?php foreach ( $services as $slug => $svc ) : ?>
+                <li><a href="<?php echo shc_url( '/care-at-home/' . $slug . '/' ); ?>"<?php echo shc_nav_current_attr( '/care-at-home/' . $slug . '/' ); ?>><strong><?php echo esc_html( $svc['nav'] ); ?></strong><span><?php echo esc_html( $svc['card'] ); ?></span></a></li>
+                <?php endforeach; ?>
               </ul>
             </div>
-            <div class="mega-col mega-col--young">
-              <p class="mega-heading"><a href="<?php echo shc_url( '/supported-accommodation/' ); ?>">Supported Accommodation 18+</a></p>
-              <ul>
-                <li><a href="<?php echo shc_url( '/supported-accommodation/' ); ?>">Overview</a></li>
-                <li><a href="<?php echo shc_url( '/supported-accommodation/our-homes/' ); ?>">Our homes</a></li>
-                <li><a href="<?php echo shc_url( '/supported-accommodation/life-skills/' ); ?>">Life skills</a></li>
-                <li><a href="<?php echo shc_url( '/supported-accommodation/education-and-employment/' ); ?>">Education and employment</a></li>
-                <li><a href="<?php echo shc_url( '/supported-accommodation/referral-process/' ); ?>">Referral process</a></li>
-                <li><a href="<?php echo shc_url( '/supported-accommodation/faqs/' ); ?>">FAQs</a></li>
-              </ul>
+            <div class="mega-aside">
+              <p class="mega-aside-title">Not sure what you need?</p>
+              <p>We will listen, explain your options and arrange an assessment.</p>
+              <a class="btn btn--blue btn--sm" href="<?php echo shc_url( '/contact/?service=domcare#enquiry-form' ); ?>" data-track="cta_care_assessment">Arrange a free care assessment</a>
+              <a class="mega-phone" href="<?php echo esc_url( shc_phone_href() ); ?>" data-track="phone_click"><?php echo shc_phone_icon( 16 ); // phpcs:ignore ?> <?php shc_echo_phone(); ?></a>
             </div>
           </div>
         </li>
-        <li><a class="nav-link" href="<?php echo shc_url( '/stories/' ); ?>"<?php echo shc_nav_current_attr( '/stories/' ); ?>>Stories</a></li>
-        <li><a class="nav-link" href="<?php echo shc_url( '/about/' ); ?>"<?php echo shc_nav_current_attr( '/about/' ); ?>>About</a></li>
-        <li><a class="nav-link" href="<?php echo shc_url( '/professionals/' ); ?>"<?php echo shc_nav_current_attr( '/professionals/' ); ?>>Professionals</a></li>
-        <li><a class="nav-link" href="<?php echo shc_url( '/work-with-us/' ); ?>"<?php echo shc_nav_current_attr( '/work-with-us/' ); ?>>Work with us</a></li>
+        <li><a class="nav-link" href="<?php echo shc_url( '/supported-living/' ); ?>"<?php echo shc_nav_current_attr( '/supported-living/' ); ?>>Supported Living</a></li>
+        <li><a class="nav-link" href="<?php echo shc_url( '/referrals/' ); ?>"<?php echo shc_nav_current_attr( '/referrals/' ); ?>>Referrals</a></li>
+        <li><a class="nav-link" href="<?php echo shc_url( '/our-community/' ); ?>"<?php echo shc_nav_current_attr( '/our-community/' ); ?>>Our Community</a></li>
+        <li class="has-dropdown">
+          <button class="nav-link dropdown-toggle<?php echo esc_attr( $about_cur ); ?>" type="button" aria-expanded="false" aria-controls="dd-about">About Us</button>
+          <div class="dropdown dropdown--list" id="dd-about">
+            <ul>
+              <li><a href="<?php echo shc_url( '/about-us/' ); ?>"<?php echo '/about-us/' === shc_current_path() ? ' aria-current="page"' : ''; ?>>About Super Healthcare</a></li>
+              <li><a href="<?php echo shc_url( '/about-us/quality-and-cqc/' ); ?>"<?php echo shc_nav_current_attr( '/about-us/quality-and-cqc/' ); ?>>Quality &amp; CQC</a></li>
+              <li><a href="<?php echo shc_url( '/about-us/safeguarding/' ); ?>"<?php echo shc_nav_current_attr( '/about-us/safeguarding/' ); ?>>Safeguarding</a></li>
+              <li><a href="<?php echo shc_url( '/about-us/complaints/' ); ?>"<?php echo shc_nav_current_attr( '/about-us/complaints/' ); ?>>Complaints</a></li>
+              <li><a href="<?php echo shc_url( '/about-us/policies/' ); ?>"<?php echo shc_nav_current_attr( '/about-us/policies/' ); ?>>Policies</a></li>
+            </ul>
+          </div>
+        </li>
+        <li><a class="nav-link" href="<?php echo shc_url( '/careers/' ); ?>"<?php echo shc_nav_current_attr( '/careers/' ); ?>>Careers</a></li>
         <li><a class="nav-link" href="<?php echo shc_url( '/contact/' ); ?>"<?php echo shc_nav_current_attr( '/contact/' ); ?>>Contact</a></li>
       </ul>
+      <div class="nav-mobile-actions">
+        <a class="btn btn--red btn--block" href="<?php echo shc_url( '/contact/#enquiry-form' ); ?>" data-track="cta_get_support">Get support</a>
+        <a class="btn btn--outline btn--block" href="<?php echo esc_url( shc_phone_href() ); ?>" data-track="phone_click">Call <?php shc_echo_phone(); ?></a>
+      </div>
     </nav>
 
     <div class="header-actions">
-      <a class="header-phone" href="<?php echo esc_url( shc_phone_href() ); ?>">
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>
-        <?php shc_echo_phone(); ?>
+      <a class="header-phone" href="<?php echo esc_url( shc_phone_href() ); ?>" data-track="phone_click">
+        <span class="header-phone-label">Need help?</span>
+        <span class="header-phone-number"><?php echo shc_phone_icon( 16 ); // phpcs:ignore ?><?php shc_echo_phone(); ?></span>
       </a>
-      <a class="btn btn--red btn--sm" href="<?php echo shc_url( '/contact/request-an-introduction/' ); ?>">Request an introduction</a>
+      <a class="btn btn--red btn--sm" href="<?php echo shc_url( '/contact/#enquiry-form' ); ?>" data-track="cta_get_support">Get support</a>
     </div>
   </div>
 </header>

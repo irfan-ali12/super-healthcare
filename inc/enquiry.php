@@ -73,16 +73,36 @@ function shc_enquiry_rate_key() {
 }
 
 /**
- * Redirect URL for the enquiry form.
+ * Page the form was sent from (internal paths only), falling back to Contact.
  *
  * @return string
  */
 function shc_enquiry_form_url() {
-	$page = get_page_by_path( 'contact/request-an-introduction' );
-	if ( $page ) {
-		return get_permalink( $page );
+	$path = isset( $_POST['return_path'] ) ? sanitize_text_field( wp_unslash( $_POST['return_path'] ) ) : '';
+	if ( '' !== $path && preg_match( '#^/[a-z0-9\-/]*$#', $path ) ) {
+		$page = get_page_by_path( trim( $path, '/' ), OBJECT, 'page' );
+		if ( $page && 'publish' === $page->post_status ) {
+			return get_permalink( $page );
+		}
 	}
-	return shc_url( '/contact/' );
+	return home_url( '/contact/' );
+}
+
+/**
+ * Recipient for a service value.
+ *
+ * @param string $service Service value.
+ * @return string
+ */
+function shc_enquiry_recipient( $service ) {
+	if ( 'supported-living' === $service ) {
+		$to = shc_setting( 'enquiry_email_supported_living' );
+	} elseif ( 'referral' === $service ) {
+		$to = shc_setting( 'enquiry_email_referrals' );
+	} else {
+		$to = shc_setting( 'enquiry_email_care' );
+	}
+	return is_email( $to ) ? $to : shc_setting( 'email' );
 }
 
 /**
@@ -97,14 +117,14 @@ function shc_handle_enquiry() {
 
 	// Honeypot: silent success.
 	if ( ! empty( $_POST['website'] ) ) {
-		wp_safe_redirect( add_query_arg( 'sent', 'SHC-HP00', $redirect ) . '#enquiry-form' );
+		wp_safe_redirect( add_query_arg( 'sent', 'SHC-HP00', $redirect ) . '#enquiry' );
 		exit;
 	}
 
 	$rate_key = shc_enquiry_rate_key();
 	$count    = (int) get_transient( $rate_key );
 	if ( $count >= 5 ) {
-		wp_safe_redirect( add_query_arg( 'e', 'rate', $redirect ) . '#enquiry-form' );
+		wp_safe_redirect( add_query_arg( 'e', 'rate', $redirect ) . '#enquiry' );
 		exit;
 	}
 
@@ -116,8 +136,10 @@ function shc_handle_enquiry() {
 		'who'            => isset( $_POST['who'] ) ? sanitize_text_field( wp_unslash( $_POST['who'] ) ) : '',
 		'service'        => isset( $_POST['service'] ) ? sanitize_text_field( wp_unslash( $_POST['service'] ) ) : '',
 		'postcode'       => isset( $_POST['postcode'] ) ? sanitize_text_field( wp_unslash( $_POST['postcode'] ) ) : '',
+		'organisation'   => isset( $_POST['organisation'] ) ? sanitize_text_field( wp_unslash( $_POST['organisation'] ) ) : '',
 		'message'        => isset( $_POST['message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['message'] ) ) : '',
 		'consent'        => isset( $_POST['consent'] ) ? '1' : '',
+		'is_referral'    => ! empty( $_POST['is_referral'] ) ? '1' : '',
 	);
 
 	$errors = shc_validate_enquiry( $data );
@@ -131,7 +153,7 @@ function shc_handle_enquiry() {
 			),
 			15 * MINUTE_IN_SECONDS
 		);
-		wp_safe_redirect( add_query_arg( 'e', $token, $redirect ) . '#enquiry-form' );
+		wp_safe_redirect( add_query_arg( 'e', $token, $redirect ) . '#enquiry' );
 		exit;
 	}
 
@@ -139,23 +161,20 @@ function shc_handle_enquiry() {
 
 	$ref = 'SHC-' . strtoupper( wp_generate_password( 6, false, false ) );
 
-	$is_supported = ( 'supported-accommodation' === $data['service'] );
-	$to           = $is_supported ? shc_setting( 'enquiry_email_supported' ) : shc_setting( 'enquiry_email_adult' );
-	if ( '' === $to ) {
-		$to = shc_setting( 'email' );
-	}
+	$to = shc_enquiry_recipient( $data['is_referral'] ? 'referral' : $data['service'] );
 
-	$subject = sprintf( '[Super Healthcare] Enquiry %s', $ref );
+	$subject = sprintf( '[Super Healthcare] %1$s%2$s %3$s', $data['is_referral'] ? 'Professional referral: ' : '', shc_enquiry_service_label( $data['service'] ), $ref );
 	$body    = sprintf(
-		"Reference: %s\nName: %s\nEmail: %s\nPhone: %s\nContact method: %s\nWho needs support: %s\nService: %s\nPostcode: %s\n\nMessage:\n%s\n",
+		"Reference: %s\nName: %s\nEmail: %s\nPhone: %s\nContact method: %s\nWho needs support: %s\nService: %s\nPostcode: %s\nOrganisation: %s\n\nMessage:\n%s\n",
 		$ref,
 		$data['name'],
 		$data['email'],
 		$data['phone'],
 		$data['contact_method'],
 		$data['who'],
-		$data['service'],
+		shc_enquiry_service_label( $data['service'] ),
 		$data['postcode'],
+		'' !== $data['organisation'] ? $data['organisation'] : '-',
 		$data['message']
 	);
 
@@ -168,7 +187,7 @@ function shc_handle_enquiry() {
 		wp_mail( $to, $subject, $body, $headers );
 	}
 
-	wp_safe_redirect( add_query_arg( 'sent', rawurlencode( $ref ), $redirect ) . '#enquiry-form' );
+	wp_safe_redirect( add_query_arg( array( 'sent' => rawurlencode( $ref ), 'svc' => rawurlencode( $data['service'] ) ), $redirect ) . '#enquiry' );
 	exit;
 }
 

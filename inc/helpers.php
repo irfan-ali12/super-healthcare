@@ -1,6 +1,6 @@
 <?php
 /**
- * Theme helpers: URLs, assets, settings output, navigation.
+ * Theme helpers: URLs, assets, settings output, navigation and shared UI.
  *
  * @package Super_Healthcare
  */
@@ -17,8 +17,18 @@ function shc_url( $path ) {
 	if ( '/' === $path || '' === $path ) {
 		return esc_url( home_url( '/' ) );
 	}
-	$path = '/' . ltrim( $path, '/' );
-	return esc_url( trailingslashit( home_url( $path ) ) );
+	$hash  = '';
+	$query = '';
+	if ( false !== strpos( $path, '#' ) ) {
+		list( $path, $hash ) = explode( '#', $path, 2 );
+		$hash                = '#' . $hash;
+	}
+	if ( false !== strpos( $path, '?' ) ) {
+		list( $path, $query ) = explode( '?', $path, 2 );
+		$query                = '?' . $query;
+	}
+	$path = '/' . trim( $path, '/' ) . '/';
+	return esc_url( home_url( $path ) . $query . $hash );
 }
 
 /**
@@ -32,7 +42,7 @@ function shc_asset( $path ) {
 }
 
 /**
- * Current request path (leading slash, trailing slash).
+ * Current request path (leading and trailing slash).
  *
  * @return string
  */
@@ -48,173 +58,134 @@ function shc_current_path() {
 }
 
 /**
- * Normalise a nav href for comparison.
+ * Whether the current page is the given path or inside it.
  *
- * @param string $href Path or URL.
- * @return string
- */
-function shc_normalise_path( $href ) {
-	$path = wp_parse_url( $href, PHP_URL_PATH );
-	if ( null === $path || false === $path ) {
-		$path = $href;
-	}
-	if ( '/' === $path || '' === $path ) {
-		return '/';
-	}
-	return '/' . trim( $path, '/' ) . '/';
-}
-
-/**
- * Whether a nav href matches the current page.
- *
- * @param string $href Internal path like /contact/.
+ * @param string $prefix Path like /care-at-home/.
  * @return bool
  */
-function shc_nav_is_current( $href ) {
-	$current = shc_current_path();
-	$target  = shc_normalise_path( $href );
-	if ( $current === $target ) {
-		return true;
-	}
-	$section_roots = array( '/about/', '/contact/', '/professionals/', '/work-with-us/', '/stories/' );
-	if ( in_array( $target, $section_roots, true ) && 0 === strpos( $current, $target ) ) {
-		return true;
-	}
-	return false;
+function shc_in_section( $prefix ) {
+	$prefix = '/' . trim( $prefix, '/' ) . '/';
+	return 0 === strpos( shc_current_path(), $prefix );
 }
 
 /**
- * Whether the Services mega toggle should show is-current.
- *
- * @return bool
- */
-function shc_nav_services_is_current() {
-	$path = shc_current_path();
-	return 0 === strpos( $path, '/adult-care-at-home/' )
-		|| '/adult-care-at-home/' === $path
-		|| 0 === strpos( $path, '/supported-accommodation/' )
-		|| '/supported-accommodation/' === $path;
-}
-
-/**
- * aria-current="page" attribute for nav links.
+ * aria-current="page" for nav links (exact page or section).
  *
  * @param string $href Internal path.
- * @return string Empty or attribute fragment.
+ * @return string
  */
 function shc_nav_current_attr( $href ) {
-	return shc_nav_is_current( $href ) ? ' aria-current="page"' : '';
+	return shc_in_section( $href ) ? ' aria-current="page"' : '';
 }
 
 /**
- * Setting value from options.
+ * Setting value, falling back to the verified default.
  *
  * @param string $key Setting key.
  * @return string
  */
 function shc_setting( $key ) {
 	$options = get_option( 'shc_settings', array() );
-	if ( ! is_array( $options ) ) {
-		return '';
+	if ( is_array( $options ) && isset( $options[ $key ] ) && '' !== trim( (string) $options[ $key ] ) ) {
+		return (string) $options[ $key ];
 	}
-	return isset( $options[ $key ] ) ? (string) $options[ $key ] : '';
+	$defaults = shc_setting_defaults();
+	return isset( $defaults[ $key ] ) ? $defaults[ $key ] : '';
 }
 
 /**
- * tel: href from stored phone display value.
+ * Display phone number.
+ *
+ * @return string
+ */
+function shc_phone() {
+	return shc_setting( 'phone' );
+}
+
+/**
+ * tel: href from the stored phone value.
  *
  * @return string
  */
 function shc_phone_href() {
-	$phone = shc_setting( 'phone' );
-	if ( '' === $phone ) {
-		return '#';
-	}
-	$digits = preg_replace( '/[^\d+]/', '', $phone );
-	return 'tel:' . $digits;
+	$digits = preg_replace( '/[^\d+]/', '', shc_phone() );
+	return '' === $digits ? '#' : 'tel:' . $digits;
 }
 
 /**
- * Echo formatted phone for display, or yellow placeholder.
+ * Echo the phone number (escaped).
  */
 function shc_echo_phone() {
-	$phone = shc_setting( 'phone' );
-	if ( '' !== $phone ) {
-		echo esc_html( $phone );
-		return;
-	}
-	echo '<span class="placeholder-inline">[phone number]</span>';
+	echo esc_html( shc_phone() );
 }
 
 /**
- * Echo email link or placeholder.
+ * Phone icon SVG.
+ *
+ * @param int $size Pixel size.
+ * @return string
+ */
+function shc_phone_icon( $size = 18 ) {
+	return sprintf(
+		'<svg aria-hidden="true" viewBox="0 0 24 24" width="%1$d" height="%1$d"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></svg>',
+		(int) $size
+	);
+}
+
+/**
+ * Echo an email link.
  */
 function shc_echo_email_link() {
 	$email = shc_setting( 'email' );
-	if ( '' !== $email ) {
-		printf(
-			'<a href="mailto:%1$s">%2$s</a>',
-			esc_attr( $email ),
-			esc_html( $email )
-		);
+	if ( '' === $email ) {
 		return;
 	}
-	echo '<span class="placeholder-inline">[email address]</span>';
+	printf( '<a href="mailto:%1$s" data-track="email_click">%2$s</a>', esc_attr( $email ), esc_html( $email ) );
 }
 
 /**
- * Echo office address or placeholder (allows simple line breaks).
+ * Echo office address with line breaks, or on one line.
+ *
+ * @param bool $one_line Join lines with commas.
  */
-function shc_echo_address() {
+function shc_echo_address( $one_line = false ) {
 	$address = shc_setting( 'office_address' );
-	if ( '' !== $address ) {
-		echo nl2br( esc_html( $address ) );
+	if ( $one_line ) {
+		echo esc_html( preg_replace( '/\s*\n\s*/', ', ', trim( $address ) ) );
 		return;
 	}
-	echo '<span class="placeholder-inline">[Office address]</span>';
+	echo nl2br( esc_html( $address ) );
 }
 
 /**
- * Social URL from settings or empty string.
+ * Social URL or empty string.
  *
  * @param string $key Setting key.
  * @return string
  */
 function shc_social_url( $key ) {
 	$url = shc_setting( $key );
-	if ( '' === $url ) {
-		return '';
-	}
-	return esc_url( $url );
+	return '' === $url ? '' : esc_url( $url );
 }
 
 /**
- * Google Maps URL with fallback to provided address.
+ * Google Maps URL.
  *
  * @return string
  */
 function shc_map_url() {
-	$url = shc_setting( 'google_map_url' );
-	if ( '' !== $url ) {
-		return esc_url( $url );
-	}
-	return 'https://maps.google.com/?q=201+Hamlet+Ct+Rd%2C+Westcliff-on-Sea%2C+Southend-on-Sea%2C+Westcliff-on-Sea+SS0+7EL%2C+United+Kingdom';
+	return esc_url( shc_setting( 'google_map_url' ) );
 }
 
 /**
- * Echo company number or placeholder.
+ * Echo the company number.
  */
 function shc_echo_company_number() {
-	$num = shc_setting( 'company_number' );
-	if ( '' !== $num ) {
-		echo esc_html( $num );
-		return;
-	}
-	echo '<span class="placeholder-inline">[company number]</span>';
+	echo esc_html( shc_setting( 'company_number' ) );
 }
 
 /**
- * CQC report URL or empty.
+ * CQC profile URL.
  *
  * @return string
  */
@@ -223,147 +194,219 @@ function shc_cqc_url() {
 }
 
 /**
- * CQC URL for links (falls back when setting not yet saved).
+ * Back-compat alias used by 1.x templates.
  *
  * @return string
  */
 function shc_cqc_url_or_default() {
-	$url = shc_cqc_url();
-	if ( '' !== $url ) {
-		return $url;
-	}
-	return 'https://www.cqc.org.uk/location/1-6575573200';
+	return shc_cqc_url();
 }
 
 /**
- * Echo CQC publication date or placeholder inline.
- */
-function shc_echo_cqc_date() {
-	$date = shc_setting( 'cqc_publication_date' );
-	if ( '' !== $date ) {
-		echo esc_html( $date );
-		return;
-	}
-	echo '<span class="placeholder-inline">[CQC publication date]</span>';
-}
-
-/**
- * Echo office hours placeholder block.
- */
-function shc_echo_office_hours() {
-	$hours = shc_setting( 'office_hours' );
-	if ( '' !== $hours ) {
-		echo esc_html( $hours );
-		return;
-	}
-	echo '<span class="placeholder-inline">[e.g. Monday to Friday, 9am to 5pm]</span>';
-}
-
-/**
- * Echo out-of-hours text or placeholder.
- */
-function shc_echo_out_of_hours() {
-	$text = shc_setting( 'out_of_hours' );
-	if ( '' !== $text ) {
-		echo esc_html( $text );
-		return;
-	}
-	echo '<span class="placeholder-inline">[Out of hours wording approved by Operations]</span>';
-}
-
-/**
- * Whether SA availability notice should display.
+ * CQC report URL for a service.
  *
- * @return bool
+ * @param string $service supported_living|homecare.
+ * @return string
  */
-/**
- * Echo SA availability status or placeholder.
- */
-function shc_echo_sa_availability_status() {
-	$status = shc_setting( 'sa_availability_status' );
-	if ( '' !== $status ) {
-		echo esc_html( $status );
-		return;
-	}
-	echo '<span class="placeholder-inline">[status set by the Supported Accommodation lead]</span>';
+function shc_cqc_report_url( $service ) {
+	$url = shc_setting( 'cqc_report_url_' . $service );
+	return '' !== $url ? $url : shc_cqc_url();
 }
 
 /**
- * Echo SA availability updated date or placeholder.
- */
-function shc_echo_sa_availability_updated() {
-	$date = shc_setting( 'sa_availability_updated' );
-	if ( '' !== $date ) {
-		echo esc_html( $date );
-		return;
-	}
-	echo '<span class="placeholder-inline">[date]</span>';
-}
-
-function shc_sa_notice_visible() {
-	$expiry = shc_setting( 'sa_availability_expiry' );
-	if ( '' === $expiry ) {
-		return true;
-	}
-	$ts = strtotime( $expiry );
-	if ( false === $ts ) {
-		return true;
-	}
-	return time() < $ts;
-}
-
-/**
- * Document title override stack.
+ * CQC publication date for a service.
  *
- * @var string
+ * @param string $service supported_living|homecare.
+ * @return string
  */
-$shc_document_title = '';
+function shc_cqc_date( $service ) {
+	return shc_setting( 'cqc_date_' . $service );
+}
 
 /**
- * Set document <title> (in addition to meta description / body class).
+ * Response commitment sentence, or empty string.
+ *
+ * @return string
+ */
+function shc_response_commitment() {
+	return shc_setting( 'response_commitment' );
+}
+
+/**
+ * Supported Living availability notice data, or null when not set or expired.
+ *
+ * @return array{status: string, updated: string}|null
+ */
+function shc_sl_availability() {
+	$status = shc_setting( 'sl_availability_status' );
+	if ( '' === $status ) {
+		return null;
+	}
+	$expiry = shc_setting( 'sl_availability_expiry' );
+	if ( '' !== $expiry ) {
+		$ts = strtotime( $expiry . ' 23:59:59' );
+		if ( false !== $ts && time() > $ts ) {
+			return null;
+		}
+	}
+	return array(
+		'status'  => $status,
+		'updated' => shc_setting( 'sl_availability_updated' ),
+	);
+}
+
+/*
+ * ------------------------------------------------------------------
+ * Document title and meta, set by each template before the head loads.
+ * ------------------------------------------------------------------
+ */
+
+$GLOBALS['shc_document_title']   = '';
+$GLOBALS['shc_page_description'] = '';
+$GLOBALS['shc_body_class']       = '';
+$GLOBALS['shc_page_context']     = '';
+
+/**
+ * Set per-page meta description and body class.
+ *
+ * @param string $description Meta description.
+ * @param string $body_class  Extra body class.
+ */
+function shc_set_document_meta( $description, $body_class = '' ) {
+	$GLOBALS['shc_page_description'] = (string) $description;
+	$GLOBALS['shc_body_class']       = (string) $body_class;
+}
+
+/**
+ * Meta description for the current document.
+ *
+ * @return string
+ */
+function shc_page_description() {
+	return (string) $GLOBALS['shc_page_description'];
+}
+
+/**
+ * Set the document title.
  *
  * @param string $title Full document title.
  */
 function shc_set_document_title( $title ) {
-	global $shc_document_title;
-	$shc_document_title = (string) $title;
+	$GLOBALS['shc_document_title'] = (string) $title;
 }
 
 /**
- * Filter document title when set by template.
+ * Set page context used by the mobile action bar (e.g. "referrals").
+ *
+ * @param string $context Context key.
+ */
+function shc_set_page_context( $context ) {
+	$GLOBALS['shc_page_context'] = (string) $context;
+}
+
+/**
+ * Current page context.
+ *
+ * @return string
+ */
+function shc_page_context() {
+	return (string) $GLOBALS['shc_page_context'];
+}
+
+/**
+ * Filter the document title when a template has set one.
  *
  * @param string $title Title.
  * @return string
  */
 function shc_document_title_filter( $title ) {
-	global $shc_document_title;
-	if ( '' !== $shc_document_title ) {
-		return $shc_document_title;
-	}
-	return $title;
+	return '' !== $GLOBALS['shc_document_title'] ? $GLOBALS['shc_document_title'] : $title;
 }
 add_filter( 'pre_get_document_title', 'shc_document_title_filter', 20 );
 
 /**
- * Allowed enquiry service values (must match form options and main.js).
+ * Append template body class.
  *
+ * @param string[] $classes Body classes.
  * @return string[]
  */
-function shc_allowed_enquiry_services() {
+function shc_filter_body_class( $classes ) {
+	if ( '' !== $GLOBALS['shc_body_class'] ) {
+		$classes[] = $GLOBALS['shc_body_class'];
+	}
+	return $classes;
+}
+add_filter( 'body_class', 'shc_filter_body_class' );
+
+/*
+ * ------------------------------------------------------------------
+ * Enquiries
+ * ------------------------------------------------------------------
+ */
+
+/**
+ * Enquiry service options: value => label, grouped.
+ *
+ * @return array<string, array<string, string>>
+ */
+function shc_enquiry_service_groups() {
 	return array(
-		'domcare',
-		'live-in',
-		'respite',
-		'dementia',
-		'palliative',
-		'companionship',
-		'supported-accommodation',
-		'unsure',
+		'Care at Home'     => array(
+			'domcare'       => 'DomCare (visiting care)',
+			'live-in'       => 'Live-in Care',
+			'respite'       => 'Respite Care',
+			'dementia'      => 'Dementia Care',
+			'palliative'    => 'Palliative Care',
+			'companionship' => 'Companionship',
+		),
+		'Supported Living' => array(
+			'supported-living' => 'Supported Living (adults 18+)',
+		),
+		'Professionals'    => array(
+			'referral' => 'Professional referral',
+		),
+		''                 => array(
+			'unsure' => 'I’m not sure yet',
+		),
 	);
 }
 
 /**
- * Get current service slug when on a service template.
+ * Allowed enquiry service values.
+ *
+ * @return string[]
+ */
+function shc_allowed_enquiry_services() {
+	$values = array();
+	foreach ( shc_enquiry_service_groups() as $group ) {
+		$values = array_merge( $values, array_keys( $group ) );
+	}
+	return $values;
+}
+
+/**
+ * Label for an enquiry service value.
+ *
+ * @param string $value Service value.
+ * @return string
+ */
+function shc_enquiry_service_label( $value ) {
+	foreach ( shc_enquiry_service_groups() as $group ) {
+		if ( isset( $group[ $value ] ) ) {
+			return $group[ $value ];
+		}
+	}
+	return $value;
+}
+
+/*
+ * ------------------------------------------------------------------
+ * Care at Home service pages
+ * ------------------------------------------------------------------
+ */
+
+/**
+ * Service slug when on a Care at Home service page.
  *
  * @return string|null
  */
@@ -372,16 +415,16 @@ function shc_current_service_slug() {
 		return null;
 	}
 	$uri = trim( (string) get_page_uri( get_queried_object_id() ), '/' );
-	if ( preg_match( '#^adult-care-at-home/([^/]+)$#', $uri, $m ) ) {
+	if ( preg_match( '#^care-at-home/([^/]+)$#', $uri, $m ) ) {
 		return $m[1];
 	}
 	return null;
 }
 
 /**
- * Load service definition for current page.
+ * Service definition for the current page.
  *
- * @return array|null
+ * @return array<string, mixed>|null
  */
 function shc_get_current_service() {
 	$slug = shc_current_service_slug();
@@ -393,23 +436,107 @@ function shc_get_current_service() {
 }
 
 /**
- * Top-level ancestor page ID for sidebar navigation.
+ * Top-level ancestor page ID.
  *
  * @param int $post_id Page ID.
  * @return int
  */
 function shc_section_root_id( $post_id ) {
-	$post = get_post( $post_id );
-	if ( ! $post ) {
-		return 0;
+	$ancestors = get_post_ancestors( $post_id );
+	return $ancestors ? (int) end( $ancestors ) : (int) $post_id;
+}
+
+/*
+ * ------------------------------------------------------------------
+ * Shared UI
+ * ------------------------------------------------------------------
+ */
+
+/**
+ * Breadcrumb markup plus BreadcrumbList JSON-LD.
+ *
+ * @param array<int, array{0: string, 1: string}> $trail Pairs of [label, path]; last item is the current page.
+ */
+function shc_breadcrumb( $trail ) {
+	$items = array_merge( array( array( 'Home', '/' ) ), $trail );
+	$count = count( $items );
+	$list  = array();
+	echo '<nav class="breadcrumb container" aria-label="Breadcrumb"><ol>';
+	foreach ( $items as $i => $item ) {
+		$url     = shc_url( $item[1] );
+		$current = ( $i === $count - 1 ) ? ' aria-current="page"' : '';
+		printf( '<li><a href="%1$s"%2$s>%3$s</a></li>', $url, $current, esc_html( $item[0] ) );
+		$list[] = array(
+			'@type'    => 'ListItem',
+			'position' => $i + 1,
+			'name'     => $item[0],
+			'item'     => html_entity_decode( $url ),
+		);
 	}
-	$root = $post;
-	while ( $root->post_parent ) {
-		$parent = get_post( $root->post_parent );
-		if ( ! $parent ) {
-			break;
-		}
-		$root = $parent;
-	}
-	return (int) $root->ID;
+	echo '</ol></nav>';
+	printf(
+		'<script type="application/ld+json">%s</script>',
+		wp_json_encode(
+			array(
+				'@context'        => 'https://schema.org',
+				'@type'           => 'BreadcrumbList',
+				'itemListElement' => $list,
+			),
+			JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+		)
+	);
+}
+
+/**
+ * Final call-to-action band.
+ *
+ * @param array<string, string> $args title, text, button, href, track.
+ */
+function shc_cta_band( $args = array() ) {
+	$args = wp_parse_args(
+		$args,
+		array(
+			'title'  => 'Not sure what support you need?',
+			'text'   => 'Speak to our team. We will listen, explain your options and help you decide on the next step.',
+			'button' => 'Get support',
+			'href'   => shc_url( '/contact/' ) . '#enquiry-form',
+			'track'  => 'cta_get_support',
+		)
+	);
+	?>
+<section class="cta-band" aria-labelledby="cta-title">
+  <div class="container cta-inner">
+    <div class="cta-copy">
+      <h2 id="cta-title"><?php echo esc_html( $args['title'] ); ?></h2>
+      <?php if ( '' !== $args['text'] ) : ?><p><?php echo esc_html( $args['text'] ); ?></p><?php endif; ?>
+    </div>
+    <div class="cta-actions">
+      <a class="btn btn--white" href="<?php echo esc_url( $args['href'] ); ?>" data-track="<?php echo esc_attr( $args['track'] ); ?>"><?php echo esc_html( $args['button'] ); ?></a>
+      <a class="cta-phone" href="<?php echo esc_url( shc_phone_href() ); ?>" data-track="phone_click"><?php echo shc_phone_icon( 22 ); // phpcs:ignore WordPress.Security.EscapeOutput ?><span>Call <?php shc_echo_phone(); ?></span></a>
+    </div>
+  </div>
+</section>
+	<?php
+}
+
+/**
+ * Small CQC rated Good seal.
+ *
+ * @param string $class Extra classes.
+ */
+function shc_cqc_seal( $class = '' ) {
+	printf(
+		'<a class="cqc-seal %1$s" href="%2$s" target="_blank" rel="noopener" data-track="cqc_click"><span class="cqc-seal-small">CQC rated</span><span class="cqc-seal-big">Good</span><span class="visually-hidden">(opens the CQC profile in a new tab)</span></a>',
+		esc_attr( $class ),
+		esc_url( shc_cqc_url() )
+	);
+}
+
+/**
+ * The five CQC key questions.
+ *
+ * @return string[]
+ */
+function shc_cqc_key_questions() {
+	return array( 'Safe', 'Effective', 'Caring', 'Responsive', 'Well-led' );
 }
