@@ -55,7 +55,12 @@ once it is published **and** has a consent reference, so placeholder quotes can 
 **Images**: `inc/images.php` is the single registry (file, alt text, focal point, srcset).
 Real photos are in `assets/img/photos/` (WebP, 800 and 1600 px), converted from the client's
 `assets/img/new-images/` folder. AI images are in `assets/img/ai/`. These are the client's own
-infographic artwork, upscaled with an EDSR model.
+infographic artwork, upscaled with an EDSR model. Registered images can use either the usual
+`-800.webp`/`-1600.webp` pair or a single `<image-key>.webp` file.
+
+The header, footer and organization schema use `assets/img/new-images/superhealthcare-logo.jpg`.
+Theme asset URLs include each file's modification time to avoid stale browser/CDN copies. After
+uploading a theme update, purge any full-page or CDN cache so the site serves the updated markup.
 
 **Tracking**: buttons carry `data-track` attributes, and `main.js` pushes `shc_*` events to
 `window.dataLayer` **only if** an analytics tool has created it (after cookie consent). No
@@ -108,7 +113,7 @@ Save them at 1600 px wide as WebP in `assets/img/ai/` using the existing file na
 
 ## Changes in 2.1 (client feedback, 19 October 2026)
 
-- Original "providing a unique care experience" logo restored (`assets/img/logo.webp`, transparent).
+- The "providing a unique care experience" logo is used from `assets/img/new-images/superhealthcare-logo.jpg`.
 - Menu items larger and bolder, with a red colour-fill on hover.
 - Homepage "Care at Home" panel is black; Supported Living stays red.
 - "People first. Independence always." removed everywhere and replaced with "Person-centred visiting home care, shaped around you."

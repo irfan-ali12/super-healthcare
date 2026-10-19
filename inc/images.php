@@ -104,16 +104,49 @@ function shc_img( $key, $args = array() ) {
 	);
 
 	$base   = 'img/' . $img['dir'] . '/' . $key;
-	$src800 = shc_asset( $base . '-800.webp' );
-	$src16  = shc_asset( $base . '-1600.webp' );
+	$files  = array(
+		array(
+			'path'  => $base . '-800.webp',
+			'width' => 800,
+		),
+		array(
+			'path'  => $base . '-1600.webp',
+			'width' => (int) $img['w'],
+		),
+		array(
+			'path'  => $base . '.webp',
+			'width' => (int) $img['w'],
+		),
+	);
+	$sources = array();
+	foreach ( $files as $file ) {
+		if ( is_file( SHC_THEME_DIR . '/assets/' . $file['path'] ) ) {
+			$sources[] = array(
+				'url'   => shc_asset( $file['path'] ),
+				'width' => $file['width'],
+			);
+		}
+	}
+	if ( empty( $sources ) ) {
+		return '';
+	}
+
 	$w      = (int) $img['w'];
 	$h      = (int) $img['h'];
 	$alt    = null === $args['alt'] ? $img['alt'] : (string) $args['alt'];
-	$srcset = $w > 800 ? sprintf( '%1$s 800w, %2$s %3$dw', $src800, $src16, $w ) : sprintf( '%1$s %2$dw', $src800, $w );
+	$srcset = implode(
+		', ',
+		array_map(
+			static function ( $source ) {
+				return sprintf( '%1$s %2$dw', $source['url'], $source['width'] );
+			},
+			$sources
+		)
+	);
 
 	$attrs = sprintf(
 		'src="%1$s" srcset="%2$s" sizes="%3$s" width="%4$d" height="%5$d" alt="%6$s" style="object-position:%7$s"',
-		$src800,
+		$sources[0]['url'],
 		esc_attr( $srcset ),
 		esc_attr( $args['sizes'] ),
 		$w,

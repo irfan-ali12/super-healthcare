@@ -38,7 +38,18 @@ function shc_url( $path ) {
  * @return string Escaped URL.
  */
 function shc_asset( $path ) {
-	return esc_url( get_stylesheet_directory_uri() . '/assets/' . ltrim( $path, '/' ) );
+	$path = ltrim( $path, '/' );
+	$file = SHC_THEME_DIR . '/assets/' . $path;
+	$url  = get_stylesheet_directory_uri() . '/assets/' . $path;
+
+	if ( is_file( $file ) ) {
+		$modified = filemtime( $file );
+		if ( false !== $modified ) {
+			$url = add_query_arg( 'ver', (string) $modified, $url );
+		}
+	}
+
+	return esc_url( $url );
 }
 
 /**

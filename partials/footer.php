@@ -12,7 +12,7 @@ $is_referrals = 'referrals' === shc_page_context();
 <footer class="site-footer">
   <div class="container footer-grid">
     <div class="footer-brand">
-      <a class="logo logo--footer" href="<?php echo shc_url( '/' ); ?>"><img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="666" height="176" alt="Super Healthcare home" loading="lazy"></a>
+      <a class="logo logo--footer" href="<?php echo shc_url( '/' ); ?>"><img class="site-logo-image" src="<?php echo shc_asset( 'img/new-images/superhealthcare-logo.jpg' ); ?>" width="1208" height="296" alt="Super Healthcare home" loading="lazy"></a>
       <p class="footer-about"><strong>Super Healthcare Ltd</strong> provides personalised care at home and supported living for adults aged 18 and over in Westcliff-on-Sea and the surrounding area.</p>
       <address>
         <?php shc_echo_address(); ?><br>

@@ -79,6 +79,14 @@ function shc_output_org_schema() {
 		return;
 	}
 	$phone  = preg_replace( '/[^\d]/', '', shc_phone() );
+	$logo   = get_stylesheet_directory_uri() . '/assets/img/new-images/superhealthcare-logo.jpg';
+	$path   = SHC_THEME_DIR . '/assets/img/new-images/superhealthcare-logo.jpg';
+	if ( is_file( $path ) ) {
+		$modified = filemtime( $path );
+		if ( false !== $modified ) {
+			$logo = add_query_arg( 'ver', (string) $modified, $logo );
+		}
+	}
 	$schema = array(
 		'@context'    => 'https://schema.org',
 		'@type'       => 'LocalBusiness',
@@ -86,7 +94,7 @@ function shc_output_org_schema() {
 		'name'        => 'Super Healthcare Ltd',
 		'description' => 'Personalised care at home and supported living for adults in Westcliff-on-Sea and the surrounding area. Rated Good by the Care Quality Commission.',
 		'url'         => home_url( '/' ),
-		'logo'        => get_stylesheet_directory_uri() . '/assets/img/logo.png',
+		'logo'        => $logo,
 		'image'       => get_stylesheet_directory_uri() . '/assets/img/og-image.jpg',
 		'telephone'   => $phone ? '+44' . ltrim( $phone, '0' ) : '',
 		'email'       => shc_setting( 'email' ),

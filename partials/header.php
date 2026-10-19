@@ -16,7 +16,7 @@ $about_cur  = shc_in_section( '/about-us/' ) ? ' is-current' : '';
 <header class="site-header">
   <div class="container header-inner">
     <a class="logo" href="<?php echo shc_url( '/' ); ?>">
-      <img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="666" height="176" alt="Super Healthcare home">
+      <img class="site-logo-image" src="<?php echo shc_asset( 'img/new-images/superhealthcare-logo.jpg' ); ?>" width="1208" height="296" alt="Super Healthcare home">
     </a>
 
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
