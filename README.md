@@ -105,3 +105,18 @@ Size: landscape **16:9, at least 2400 × 1350 px**. Keep the subject in the **up
 
 Save them at 1600 px wide as WebP in `assets/img/ai/` using the existing file names
 (`ai-dementia-1600.webp` / `-800.webp`) to swap them without code changes.
+
+## Changes in 2.1 (client feedback, 19 October 2026)
+
+- Original "providing a unique care experience" logo restored (`assets/img/logo.webp`, transparent).
+- Menu items larger and bolder, with a red colour-fill on hover.
+- Homepage "Care at Home" panel is black; Supported Living stays red.
+- "People first. Independence always." removed everywhere and replaced with "Person-centred visiting home care, shaped around you."
+- CQC "Good" circle is green. New homecare.co.uk **9.5 out of 10** circle beside it (30 reviews, checked 19 Oct 2026). Change or hide it in **Settings → Super Healthcare → homecare.co.uk review score**.
+- Footer row with the CQC, homecare.co.uk and NHS logos, linked to the CQC profile, the homecare.co.uk reviews page and Super Healthcare's NHS website listing. All three links are editable in Settings.
+- Light-red background panels removed sitewide (solid red bands kept).
+- Comparison table header is black.
+- **Mulish** is the body font (it matches the logo), with Source Serif 4 for headings. Both are **self-hosted** in `assets/fonts/` (SIL Open Font License, about 80 KB total), so no visitor data goes to Google Fonts.
+- Our Community: category buttons are bolder with a red fill on hover, and photo captions are bold.
+- Header: the full phone number shows on screens wider than 1440px; below that, a round phone icon (tap to call) takes its place.
+- The homecare.co.uk 9.5 circle appears only in the footer, above the homecare.co.uk logo (removed from the hero).

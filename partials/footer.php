@@ -12,7 +12,7 @@ $is_referrals = 'referrals' === shc_page_context();
 <footer class="site-footer">
   <div class="container footer-grid">
     <div class="footer-brand">
-      <a class="logo logo--footer" href="<?php echo shc_url( '/' ); ?>"><img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="800" height="217" alt="Super Healthcare home" loading="lazy"></a>
+      <a class="logo logo--footer" href="<?php echo shc_url( '/' ); ?>"><img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="666" height="176" alt="Super Healthcare home" loading="lazy"></a>
       <p class="footer-about"><strong>Super Healthcare Ltd</strong> provides personalised care at home and supported living for adults aged 18 and over in Westcliff-on-Sea and the surrounding area.</p>
       <address>
         <?php shc_echo_address(); ?><br>
@@ -67,12 +67,35 @@ $is_referrals = 'referrals' === shc_page_context();
         <li><a href="<?php echo shc_url( '/cookies/' ); ?>">Cookies</a></li>
         <li><a href="<?php echo shc_url( '/accessibility/' ); ?>">Accessibility</a></li>
       </ul>
-      <?php shc_cqc_seal( 'cqc-seal--footer' ); ?>
     </nav>
+  </div>
+  <div class="container accreditations" aria-labelledby="accreditations-title">
+    <h2 class="footer-heading" id="accreditations-title">Regulated, reviewed and listed</h2>
+    <ul class="accreditation-list">
+      <li>
+        <a class="accreditation" href="<?php echo esc_url( shc_cqc_url() ); ?>" target="_blank" rel="noopener" data-track="cqc_click">
+          <img src="<?php echo shc_asset( 'img/accreditation/cqc-rated-good.webp' ); ?>" width="640" height="443" alt="Care Quality Commission: inspected and rated Good" loading="lazy">
+          <span class="visually-hidden"> (opens our CQC profile in a new tab)</span>
+        </a>
+      </li>
+      <li class="accreditation-item--stacked">
+        <?php shc_homecare_seal( 'score-seal--sm' ); ?>
+        <a class="accreditation" href="<?php echo esc_url( shc_setting( 'homecare_url' ) ); ?>" target="_blank" rel="noopener" data-track="homecare_click">
+          <img src="<?php echo shc_asset( 'img/accreditation/homecare-co-uk.webp' ); ?>" width="486" height="76" alt="homecare.co.uk" loading="lazy">
+          <span class="visually-hidden"> reviews (opens in a new tab)</span>
+        </a>
+      </li>
+      <li>
+        <a class="accreditation" href="<?php echo esc_url( shc_setting( 'nhs_url' ) ); ?>" target="_blank" rel="noopener" data-track="nhs_click">
+          <img src="<?php echo shc_asset( 'img/accreditation/nhs.webp' ); ?>" width="312" height="161" alt="NHS website listing" loading="lazy">
+          <span class="visually-hidden"> (opens in a new tab)</span>
+        </a>
+      </li>
+    </ul>
   </div>
   <div class="container footer-base">
     <p>© <?php echo esc_html( gmdate( 'Y' ) ); ?> Super Healthcare Ltd. Registered in England and Wales, company number <?php shc_echo_company_number(); ?>.</p>
-    <p>People first. Independence always.</p>
+    <p>Person-centred visiting home care, shaped around you.</p>
   </div>
 </footer>
 

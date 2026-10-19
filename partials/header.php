@@ -16,7 +16,7 @@ $about_cur  = shc_in_section( '/about-us/' ) ? ' is-current' : '';
 <header class="site-header">
   <div class="container header-inner">
     <a class="logo" href="<?php echo shc_url( '/' ); ?>">
-      <img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="800" height="217" alt="Super Healthcare home">
+      <img class="site-logo-image" src="<?php echo shc_asset( 'img/logo.webp' ); ?>" width="666" height="176" alt="Super Healthcare home">
     </a>
 
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
@@ -74,6 +74,7 @@ $about_cur  = shc_in_section( '/about-us/' ) ? ' is-current' : '';
         <span class="header-phone-label">Need help?</span>
         <span class="header-phone-number"><?php echo shc_phone_icon( 16 ); // phpcs:ignore ?><?php shc_echo_phone(); ?></span>
       </a>
+      <a class="header-call" href="<?php echo esc_url( shc_phone_href() ); ?>" data-track="phone_click" aria-label="Call us on <?php echo esc_attr( shc_phone() ); ?>" title="Call <?php echo esc_attr( shc_phone() ); ?>"><?php echo shc_phone_icon( 20 ); // phpcs:ignore ?></a>
       <a class="btn btn--red btn--sm" href="<?php echo shc_url( '/contact/#enquiry-form' ); ?>" data-track="cta_get_support">Get support</a>
     </div>
   </div>

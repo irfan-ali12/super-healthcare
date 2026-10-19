@@ -43,14 +43,16 @@ get_template_part( 'partials/header' );
       <a class="hero-panel-cta" href="<?php echo shc_url( '/supported-living/' ); ?>" data-track="pathway_select_living">Explore Supported Living</a>
     </div>
   </div>
-  <?php shc_cqc_seal( 'cqc-seal--hero' ); ?>
+  <div class="hero-seals">
+    <?php shc_cqc_seal(); ?>
+  </div>
 </section>
 
 <!-- ============ PROPOSITION ============ -->
 <section class="intro-band" aria-labelledby="hero-title">
   <div class="container intro-grid">
     <div class="intro-copy">
-      <p class="brand-line">People first. Independence always.</p>
+      <p class="brand-line">Person-centred visiting home care, shaped around you.</p>
       <h1 id="hero-title">Personalised care and support to help you live with greater independence</h1>
       <p class="intro-support">Super Healthcare provides personalised care at home and supported living, with support shaped around each person’s needs, choices, routines and goals.</p>
     </div>

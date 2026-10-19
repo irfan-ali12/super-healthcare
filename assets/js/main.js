@@ -6,7 +6,7 @@
   var menuBtn = document.querySelector('.menu-toggle');
   var nav = document.getElementById('primary-nav');
   var toggles = Array.prototype.slice.call(document.querySelectorAll('.dropdown-toggle'));
-  var desktop = window.matchMedia('(min-width: 1121px)');
+  var desktop = window.matchMedia('(min-width: 1201px)');
 
   function panelFor(btn) { return document.getElementById(btn.getAttribute('aria-controls')); }
 

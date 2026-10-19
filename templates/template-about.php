@@ -34,7 +34,7 @@ get_template_part( 'partials/header' );
   <div class="container page-hero-grid">
     <div class="page-hero-text">
       <p class="page-hero-kicker kicker--red">About Super Healthcare</p>
-      <h1 id="page-title">People first. Independence always.</h1>
+      <h1 id="page-title">Person-centred care, shaped around you</h1>
       <p class="page-hero-support">Super Healthcare Ltd provides personalised care at home and supported living for adults in Westcliff-on-Sea and the surrounding area. We believe people have the right to live as independently as possible, in a safe and comfortable home, with support shaped around them.</p>
       <p class="page-hero-trust"><?php shc_icon( 'shield' ); ?> Rated Good by the Care Quality Commission</p>
     </div>

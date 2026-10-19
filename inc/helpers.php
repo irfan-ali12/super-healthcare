@@ -533,6 +533,24 @@ function shc_cqc_seal( $class = '' ) {
 }
 
 /**
+ * homecare.co.uk review score seal (hidden when no score is set).
+ *
+ * @param string $class Extra classes.
+ */
+function shc_homecare_seal( $class = '' ) {
+	$score = shc_setting( 'homecare_score' );
+	if ( '' === $score ) {
+		return;
+	}
+	printf(
+		'<a class="score-seal %1$s" href="%2$s" target="_blank" rel="noopener" data-track="homecare_click"><span class="score-seal-big">%3$s</span><span class="score-seal-small">out of 10</span><span class="score-seal-src">homecare.co.uk</span><span class="visually-hidden">(opens our homecare.co.uk reviews in a new tab)</span></a>',
+		esc_attr( $class ),
+		esc_url( shc_setting( 'homecare_url' ) ),
+		esc_html( $score )
+	);
+}
+
+/**
  * The five CQC key questions.
  *
  * @return string[]

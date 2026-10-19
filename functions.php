@@ -7,7 +7,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SHC_THEME_VERSION', '2.0.0' );
+define( 'SHC_THEME_VERSION', '2.1.1' );
 define( 'SHC_THEME_DIR', get_stylesheet_directory() );
 define( 'SHC_THEME_URI', get_stylesheet_directory_uri() );
 
@@ -116,25 +116,6 @@ function shc_theme_setup() {
 add_action( 'after_setup_theme', 'shc_theme_setup' );
 
 /**
- * Google Fonts preconnect hints.
- *
- * @param array  $urls          URLs.
- * @param string $relation_type Relation type.
- * @return array
- */
-function shc_resource_hints( $urls, $relation_type ) {
-	if ( shc_uses_theme_shell() && 'preconnect' === $relation_type ) {
-		$urls[] = array( 'href' => 'https://fonts.googleapis.com' );
-		$urls[] = array(
-			'href'        => 'https://fonts.gstatic.com',
-			'crossorigin' => 'anonymous',
-		);
-	}
-	return $urls;
-}
-add_filter( 'wp_resource_hints', 'shc_resource_hints', 10, 2 );
-
-/**
  * Enqueue theme assets; dequeue parent styles on routed templates.
  */
 function shc_enqueue_assets() {
@@ -144,13 +125,7 @@ function shc_enqueue_assets() {
 	$css = SHC_THEME_DIR . '/assets/css/main.css';
 	$js  = SHC_THEME_DIR . '/assets/js/main.js';
 
-	wp_enqueue_style(
-		'shc-google-fonts',
-		'https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap',
-		array(),
-		null
-	);
-	wp_enqueue_style( 'shc-main', SHC_THEME_URI . '/assets/css/main.css', array( 'shc-google-fonts' ), (string) filemtime( $css ) );
+	wp_enqueue_style( 'shc-main', SHC_THEME_URI . '/assets/css/main.css', array(), (string) filemtime( $css ) );
 	wp_enqueue_script(
 		'shc-main',
 		SHC_THEME_URI . '/assets/js/main.js',
